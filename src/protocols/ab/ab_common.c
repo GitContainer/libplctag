@@ -580,7 +580,7 @@ int get_tag_data_type(ab_tag_p tag, attr attribs)
                 /* check for special tags. */
                 if(str_cmp_i(tmp_tag_name, "@raw") == 0) {
                     special_tag_rc = setup_raw_tag(tag);
-                } else if(str_str_cmp_i(tmp_tag_name, "@tags")) {
+                } else if(tag->plc_type != AB_PLC_OMRON_NJNX && str_str_cmp_i(tmp_tag_name, "@tags")) {
                     special_tag_rc = setup_tag_listing_tag(tag, tmp_tag_name);
                 } else if(str_str_cmp_i(tmp_tag_name, "@udt/")) {
                     if(tag->plc_type != AB_PLC_OMRON_NJNX) {
