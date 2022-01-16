@@ -1490,7 +1490,7 @@ LIB_EXPORT int plc_tag_read(int32_t id, int timeout)
         }
 
         tag->read_in_flight = 1;
-        tag->status = PLCTAG_STATUS_PENDING;
+        tag->status = (int8_t)PLCTAG_STATUS_PENDING;
 
         /* clear the condition var */
         cond_clear(tag->tag_cond_wait);
@@ -1690,7 +1690,7 @@ LIB_EXPORT int plc_tag_write(int32_t id, int timeout)
 
         /* a write is now in flight. */
         tag->write_in_flight = 1;
-        tag->status = PLCTAG_STATUS_OK;
+        tag->status = (int8_t)PLCTAG_STATUS_OK;
 
         /* clear the condition var */
         cond_clear(tag->tag_cond_wait);
@@ -1835,24 +1835,24 @@ LIB_EXPORT int plc_tag_get_int_attribute(int32_t id, const char *attrib_name, in
         critical_block(tag->api_mutex) {
             /* match the generic ones first. */
             if(str_cmp_i(attrib_name, "size") == 0) {
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
                 res = (int)tag->size;
             } else if(str_cmp_i(attrib_name, "read_cache_ms") == 0) {
                 /* FIXME - what happens if this overflows? */
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
                 res = (int)tag->read_cache_ms;
             } else if(str_cmp_i(attrib_name, "auto_sync_read_ms") == 0) {
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
                 res = (int)tag->auto_sync_read_ms;
             } else if(str_cmp_i(attrib_name, "auto_sync_write_ms") == 0) {
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
                 res = (int)tag->auto_sync_write_ms;
             } else if(str_cmp_i(attrib_name, "bit_num") == 0) {
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
                 res = (int)(unsigned int)(tag->bit);
             } else if(str_cmp_i(attrib_name, "connection_group_id") == 0) {
                 pdebug(DEBUG_DETAIL, "Getting the connection_group_id for tag %" PRId32 ".", id);
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
                 res = tag->connection_group_id;
             } else {
                 if(tag->vtable->get_int_attrib) {
@@ -1919,30 +1919,30 @@ LIB_EXPORT int plc_tag_set_int_attribute(int32_t id, const char *attrib_name, in
                     /* expire the cache. */
                     tag->read_cache_expire = (int64_t)0;
                     tag->read_cache_ms = (int64_t)new_value;
-                    tag->status = PLCTAG_STATUS_OK;
+                    tag->status = (int8_t)PLCTAG_STATUS_OK;
                     res = PLCTAG_STATUS_OK;
                 } else {
-                    tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                    tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                     res = PLCTAG_ERR_OUT_OF_BOUNDS;
                 }
             } else if(str_cmp_i(attrib_name, "auto_sync_read_ms") == 0) {
                 if(new_value >= 0) {
                     tag->auto_sync_read_ms = new_value;
-                    tag->status = PLCTAG_STATUS_OK;
+                    tag->status = (int8_t)PLCTAG_STATUS_OK;
                     res = PLCTAG_STATUS_OK;
                 } else {
                     pdebug(DEBUG_WARN, "auto_sync_read_ms must be greater than or equal to zero!");
-                    tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                    tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                     res = PLCTAG_ERR_OUT_OF_BOUNDS;
                 }
             } else if(str_cmp_i(attrib_name, "auto_sync_write_ms") == 0) {
                 if(new_value >= 0) {
                     tag->auto_sync_write_ms = new_value;
-                    tag->status = PLCTAG_STATUS_OK;
+                    tag->status = (int8_t)PLCTAG_STATUS_OK;
                     res = PLCTAG_STATUS_OK;
                 } else {
                     pdebug(DEBUG_WARN, "auto_sync_write_ms must be greater than or equal to zero!");
-                    tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                    tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                     res = PLCTAG_ERR_OUT_OF_BOUNDS;
                 }
             } else {
@@ -1978,7 +1978,7 @@ LIB_EXPORT int plc_tag_get_size(int32_t id)
 
     critical_block(tag->api_mutex) {
         result = tag->size;
-        tag->status = PLCTAG_STATUS_OK;
+        tag->status = (int8_t)PLCTAG_STATUS_OK;
     }
 
     rc_dec(tag);
@@ -2016,7 +2016,7 @@ LIB_EXPORT int plc_tag_set_size(int32_t id, int new_size)
             rc = tag->size;
             tag->data = new_data;
             tag->size = new_size;
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
         } else {
             rc = (int)PLCTAG_ERR_NO_MEM;
             tag->status = (int8_t)rc;
@@ -2054,7 +2054,7 @@ LIB_EXPORT int plc_tag_get_bit(int32_t id, int offset_bit)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2071,11 +2071,11 @@ LIB_EXPORT int plc_tag_get_bit(int32_t id, int offset_bit)
     critical_block(tag->api_mutex) {
         if((real_offset >= 0) && ((real_offset / 8) < tag->size)) {
             res = !!(((1 << (real_offset % 8)) & 0xFF) & (tag->data[real_offset / 8]));
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
             res = PLCTAG_ERR_OUT_OF_BOUNDS;
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
 
@@ -2101,7 +2101,7 @@ LIB_EXPORT int plc_tag_set_bit(int32_t id, int offset_bit, int val)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2127,10 +2127,10 @@ LIB_EXPORT int plc_tag_set_bit(int32_t id, int offset_bit, int val)
                 tag->data[real_offset / 8] &= (uint8_t)(~(1 << (real_offset % 8)));
             }
 
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             res = PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
@@ -2157,7 +2157,7 @@ LIB_EXPORT uint64_t plc_tag_get_uint64(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2174,10 +2174,10 @@ LIB_EXPORT uint64_t plc_tag_get_uint64(int32_t id, int offset)
                         ((uint64_t)(tag->data[offset + tag->byte_order->int64_order[6]]) << 48) +
                         ((uint64_t)(tag->data[offset + tag->byte_order->int64_order[7]]) << 56);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2211,7 +2211,7 @@ LIB_EXPORT int plc_tag_set_uint64(int32_t id, int offset, uint64_t val)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2232,10 +2232,10 @@ LIB_EXPORT int plc_tag_set_uint64(int32_t id, int offset, uint64_t val)
                 tag->data[offset + tag->byte_order->int64_order[6]] = (uint8_t)((val >> 48) & 0xFF);
                 tag->data[offset + tag->byte_order->int64_order[7]] = (uint8_t)((val >> 56) & 0xFF);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2270,7 +2270,7 @@ LIB_EXPORT int64_t plc_tag_get_int64(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2287,10 +2287,10 @@ LIB_EXPORT int64_t plc_tag_get_int64(int32_t id, int offset)
                                 ((uint64_t)(tag->data[offset + tag->byte_order->int64_order[6]]) << 48) +
                                 ((uint64_t)(tag->data[offset + tag->byte_order->int64_order[7]]) << 56));
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2325,7 +2325,7 @@ LIB_EXPORT int plc_tag_set_int64(int32_t id, int offset, int64_t ival)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2346,10 +2346,10 @@ LIB_EXPORT int plc_tag_set_int64(int32_t id, int offset, int64_t ival)
                 tag->data[offset + tag->byte_order->int64_order[6]] = (uint8_t)((val >> 48) & 0xFF);
                 tag->data[offset + tag->byte_order->int64_order[7]] = (uint8_t)((val >> 56) & 0xFF);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2381,7 +2381,7 @@ LIB_EXPORT uint32_t plc_tag_get_uint32(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2394,10 +2394,10 @@ LIB_EXPORT uint32_t plc_tag_get_uint32(int32_t id, int offset)
                         ((uint32_t)(tag->data[offset + tag->byte_order->int32_order[2]]) << 16) +
                         ((uint32_t)(tag->data[offset + tag->byte_order->int32_order[3]]) << 24);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2431,7 +2431,7 @@ LIB_EXPORT int plc_tag_set_uint32(int32_t id, int offset, uint32_t val)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2448,10 +2448,10 @@ LIB_EXPORT int plc_tag_set_uint32(int32_t id, int offset, uint32_t val)
                 tag->data[offset + tag->byte_order->int32_order[2]] = (uint8_t)((val >> 16) & 0xFF);
                 tag->data[offset + tag->byte_order->int32_order[3]] = (uint8_t)((val >> 24) & 0xFF);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2486,7 +2486,7 @@ LIB_EXPORT int32_t  plc_tag_get_int32(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2499,10 +2499,10 @@ LIB_EXPORT int32_t  plc_tag_get_int32(int32_t id, int offset)
                                 ((uint32_t)(tag->data[offset + tag->byte_order->int32_order[2]]) << 16) +
                                 ((uint32_t)(tag->data[offset + tag->byte_order->int32_order[3]]) << 24));
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             }  else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2537,7 +2537,7 @@ LIB_EXPORT int plc_tag_set_int32(int32_t id, int offset, int32_t ival)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2554,10 +2554,10 @@ LIB_EXPORT int plc_tag_set_int32(int32_t id, int offset, int32_t ival)
                 tag->data[offset + tag->byte_order->int32_order[2]] = (uint8_t)((val >> 16) & 0xFF);
                 tag->data[offset + tag->byte_order->int32_order[3]] = (uint8_t)((val >> 24) & 0xFF);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2595,7 +2595,7 @@ LIB_EXPORT uint16_t plc_tag_get_uint16(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2606,10 +2606,10 @@ LIB_EXPORT uint16_t plc_tag_get_uint16(int32_t id, int offset)
                 res =   (uint16_t)(((uint16_t)(tag->data[offset + tag->byte_order->int16_order[0]]) << 0 ) +
                                    ((uint16_t)(tag->data[offset + tag->byte_order->int16_order[1]]) << 8 ));
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2644,7 +2644,7 @@ LIB_EXPORT int plc_tag_set_uint16(int32_t id, int offset, uint16_t val)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2659,10 +2659,10 @@ LIB_EXPORT int plc_tag_set_uint16(int32_t id, int offset, uint16_t val)
                 tag->data[offset + tag->byte_order->int16_order[0]] = (uint8_t)((val >> 0 ) & 0xFF);
                 tag->data[offset + tag->byte_order->int16_order[1]] = (uint8_t)((val >> 8 ) & 0xFF);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2701,7 +2701,7 @@ LIB_EXPORT int16_t  plc_tag_get_int16(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2711,10 +2711,10 @@ LIB_EXPORT int16_t  plc_tag_get_int16(int32_t id, int offset)
             if((offset >= 0) && (offset + ((int)sizeof(int16_t)) <= tag->size)) {
                 res =   (int16_t)(uint16_t)(((uint16_t)(tag->data[offset + tag->byte_order->int16_order[0]]) << 0 ) +
                                             ((uint16_t)(tag->data[offset + tag->byte_order->int16_order[1]]) << 8 ));
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2750,7 +2750,7 @@ LIB_EXPORT int plc_tag_set_int16(int32_t id, int offset, int16_t ival)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2765,10 +2765,10 @@ LIB_EXPORT int plc_tag_set_int16(int32_t id, int offset, int16_t ival)
                 tag->data[offset + tag->byte_order->int16_order[0]] = (uint8_t)((val >> 0 ) & 0xFF);
                 tag->data[offset + tag->byte_order->int16_order[1]] = (uint8_t)((val >> 8 ) & 0xFF);
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2807,7 +2807,7 @@ LIB_EXPORT uint8_t plc_tag_get_uint8(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2816,10 +2816,10 @@ LIB_EXPORT uint8_t plc_tag_get_uint8(int32_t id, int offset)
         critical_block(tag->api_mutex) {
             if((offset >= 0) && (offset + ((int)sizeof(uint8_t)) <= tag->size)) {
                 res = tag->data[offset];
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2854,7 +2854,7 @@ LIB_EXPORT int plc_tag_set_uint8(int32_t id, int offset, uint8_t val)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2868,10 +2868,10 @@ LIB_EXPORT int plc_tag_set_uint8(int32_t id, int offset, uint8_t val)
 
                 tag->data[offset] = val;
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -2907,7 +2907,7 @@ LIB_EXPORT int8_t plc_tag_get_int8(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
@@ -2916,10 +2916,10 @@ LIB_EXPORT int8_t plc_tag_get_int8(int32_t id, int offset)
         critical_block(tag->api_mutex) {
             if((offset >= 0) && (offset + ((int)sizeof(uint8_t)) <= tag->size)) {
                 res =   (int8_t)tag->data[offset];
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
@@ -2955,7 +2955,7 @@ LIB_EXPORT int plc_tag_set_int8(int32_t id, int offset, int8_t ival)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -2969,10 +2969,10 @@ LIB_EXPORT int plc_tag_set_int8(int32_t id, int offset, int8_t ival)
 
                 tag->data[offset] = val;
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
@@ -3011,14 +3011,14 @@ LIB_EXPORT double plc_tag_get_float64(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
 
     if(tag->is_bit) {
         pdebug(DEBUG_WARN, "Getting float64 value is unsupported on a bit tag!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return res;
     }
@@ -3034,11 +3034,11 @@ LIB_EXPORT double plc_tag_get_float64(int32_t id, int offset)
                     ((uint64_t)(tag->data[offset + tag->byte_order->float64_order[6]]) << 48) +
                     ((uint64_t)(tag->data[offset + tag->byte_order->float64_order[7]]) << 56);
 
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
             rc = PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             rc = PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
@@ -3074,14 +3074,14 @@ LIB_EXPORT int plc_tag_set_float64(int32_t id, int offset, double fval)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
 
     if(tag->is_bit) {
         pdebug(DEBUG_WARN, "Setting float64 value is unsupported on a bit tag!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return PLCTAG_ERR_UNSUPPORTED;
     }
@@ -3104,10 +3104,10 @@ LIB_EXPORT int plc_tag_set_float64(int32_t id, int offset, double fval)
             tag->data[offset + tag->byte_order->float64_order[6]] = (uint8_t)((val >> 48) & 0xFF);
             tag->data[offset + tag->byte_order->float64_order[7]] = (uint8_t)((val >> 56) & 0xFF);
 
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             rc = PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
@@ -3136,14 +3136,14 @@ LIB_EXPORT float plc_tag_get_float32(int32_t id, int offset)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return res;
     }
 
     if(tag->is_bit) {
         pdebug(DEBUG_WARN, "Getting float32 value is unsupported on a bit tag!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return res;
     }
@@ -3155,11 +3155,11 @@ LIB_EXPORT float plc_tag_get_float32(int32_t id, int offset)
                                ((uint32_t)(tag->data[offset + tag->byte_order->float32_order[2]]) << 16) +
                                ((uint32_t)(tag->data[offset + tag->byte_order->float32_order[3]]) << 24));
 
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
             rc = PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             rc = PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
@@ -3195,14 +3195,14 @@ LIB_EXPORT int plc_tag_set_float32(int32_t id, int offset, float fval)
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
 
     if(tag->is_bit) {
         pdebug(DEBUG_WARN, "Setting float32 value is unsupported on a bit tag!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return PLCTAG_ERR_UNSUPPORTED;
     }
@@ -3221,10 +3221,10 @@ LIB_EXPORT int plc_tag_set_float32(int32_t id, int offset, float fval)
             tag->data[offset + tag->byte_order->float32_order[2]] = (uint8_t)((val >> 16) & 0xFF);
             tag->data[offset + tag->byte_order->float32_order[3]] = (uint8_t)((val >> 24) & 0xFF);
 
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             rc = PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
@@ -3251,7 +3251,7 @@ LIB_EXPORT int plc_tag_get_string(int32_t tag_id, int string_start_offset, char 
     /* are strings defined for this tag? */
     if(!tag->byte_order || !tag->byte_order->str_is_defined) {
         pdebug(DEBUG_WARN,"Tag has no definitions for strings!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return PLCTAG_ERR_UNSUPPORTED;
     }
@@ -3259,14 +3259,14 @@ LIB_EXPORT int plc_tag_get_string(int32_t tag_id, int string_start_offset, char 
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
 
     if(tag->is_bit) {
         pdebug(DEBUG_WARN, "Getting a string value from a bit tag is not supported!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return PLCTAG_ERR_UNSUPPORTED;
     }
@@ -3294,11 +3294,11 @@ LIB_EXPORT int plc_tag_get_string(int32_t tag_id, int string_start_offset, char 
                 buffer[i] = (char)tag->data[char_index];
             }
 
-            tag->status = PLCTAG_STATUS_OK;
+            tag->status = (int8_t)PLCTAG_STATUS_OK;
             rc = PLCTAG_STATUS_OK;
         } else {
             pdebug(DEBUG_WARN, "Data offset out of bounds!");
-            tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+            tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
             rc = PLCTAG_ERR_OUT_OF_BOUNDS;
         }
     }
@@ -3327,7 +3327,7 @@ LIB_EXPORT int plc_tag_set_string(int32_t tag_id, int string_start_offset, const
     /* is there data? */
     if(!tag->data) {
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         rc_dec(tag);
         return PLCTAG_ERR_NO_DATA;
     }
@@ -3335,14 +3335,14 @@ LIB_EXPORT int plc_tag_set_string(int32_t tag_id, int string_start_offset, const
     /* are strings defined for this tag? */
     if(!tag->byte_order || !tag->byte_order->str_is_defined) {
         pdebug(DEBUG_WARN,"Tag has no definitions for strings!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
     if(!string_val) {
         pdebug(DEBUG_WARN, "New string value pointer is null!");
-        tag->status = PLCTAG_ERR_NULL_PTR;
+        tag->status = (int8_t)PLCTAG_ERR_NULL_PTR;
         rc_dec(tag);
         return PLCTAG_ERR_NULL_PTR;
     }
@@ -3351,7 +3351,7 @@ LIB_EXPORT int plc_tag_set_string(int32_t tag_id, int string_start_offset, const
 
     if(tag->is_bit) {
         pdebug(DEBUG_WARN, "Setting a string value on a bit tag is not supported!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc_dec(tag);
         return PLCTAG_ERR_UNSUPPORTED;
     }
@@ -3501,7 +3501,7 @@ LIB_EXPORT int plc_tag_get_string_capacity(int32_t id, int string_start_offset)
     if(!tag->byte_order || !tag->byte_order->str_is_defined) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no definitions for strings!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3509,14 +3509,14 @@ LIB_EXPORT int plc_tag_get_string_capacity(int32_t id, int string_start_offset)
     if(!tag->data) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         return PLCTAG_ERR_NO_DATA;
     }
 
     if(tag->is_bit) {
         rc_dec(tag);
         pdebug(DEBUG_WARN, "Getting string capacity from a bit tag is not supported!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3549,7 +3549,7 @@ LIB_EXPORT int plc_tag_get_string_length(int32_t id, int string_start_offset)
     if(!tag->byte_order || !tag->byte_order->str_is_defined) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no definitions for strings!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3557,14 +3557,14 @@ LIB_EXPORT int plc_tag_get_string_length(int32_t id, int string_start_offset)
     if(!tag->data) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         return PLCTAG_ERR_NO_DATA;
     }
 
     if(tag->is_bit) {
         rc_dec(tag);
         pdebug(DEBUG_WARN, "Getting string length from a bit tag is not supported!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3598,7 +3598,7 @@ LIB_EXPORT int plc_tag_get_string_total_length(int32_t id, int string_start_offs
     if(!tag->byte_order || !tag->byte_order->str_is_defined) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no definitions for strings!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3606,14 +3606,14 @@ LIB_EXPORT int plc_tag_get_string_total_length(int32_t id, int string_start_offs
     if(!tag->data) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         return PLCTAG_ERR_NO_DATA;
     }
 
     if(tag->is_bit) {
         rc_dec(tag);
         pdebug(DEBUG_WARN, "Getting a string total length from a bit tag is not supported!");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         return PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3649,7 +3649,7 @@ LIB_EXPORT int plc_tag_set_raw_bytes(int32_t id, int offset, uint8_t *buffer, in
     if(!tag->data) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         return PLCTAG_ERR_NO_DATA;
     }
 
@@ -3675,16 +3675,16 @@ LIB_EXPORT int plc_tag_set_raw_bytes(int32_t id, int offset, uint8_t *buffer, in
                     tag->data[offset + i] = buffer[i];
                 }
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
         pdebug(DEBUG_WARN,"Trying to write a list of value on a Tag bit.");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc=PLCTAG_ERR_UNSUPPORTED;
     }
 
@@ -3710,7 +3710,7 @@ LIB_EXPORT int plc_tag_get_raw_bytes(int32_t id, int offset, uint8_t *buffer, in
     if(!tag->data) {
         rc_dec(tag);
         pdebug(DEBUG_WARN,"Tag has no data!");
-        tag->status = PLCTAG_ERR_NO_DATA;
+        tag->status = (int8_t)PLCTAG_ERR_NO_DATA;
         return PLCTAG_ERR_NO_DATA;
     }
 
@@ -3732,16 +3732,16 @@ LIB_EXPORT int plc_tag_get_raw_bytes(int32_t id, int offset, uint8_t *buffer, in
                     buffer[i] = tag->data[offset + i];
                 }
 
-                tag->status = PLCTAG_STATUS_OK;
+                tag->status = (int8_t)PLCTAG_STATUS_OK;
             } else {
                 pdebug(DEBUG_WARN, "Data offset out of bounds!");
-                tag->status = PLCTAG_ERR_OUT_OF_BOUNDS;
+                tag->status = (int8_t)PLCTAG_ERR_OUT_OF_BOUNDS;
                 rc = PLCTAG_ERR_OUT_OF_BOUNDS;
             }
         }
     } else {
         pdebug(DEBUG_WARN,"Trying to read a list of values from a Tag bit.");
-        tag->status = PLCTAG_ERR_UNSUPPORTED;
+        tag->status = (int8_t)PLCTAG_ERR_UNSUPPORTED;
         rc = PLCTAG_ERR_UNSUPPORTED;
     }
 
