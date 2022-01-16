@@ -1559,7 +1559,7 @@ LIB_EXPORT int plc_tag_read(int32_t id, int timeout)
             }
         } while(rc == PLCTAG_STATUS_PENDING && time_ms() > end_time);
 
-        /* the write is not in flight anymore. */
+        /* the read is not in flight anymore. */
         critical_block(tag->api_mutex) {
             tag->read_in_flight = 0;
             tag->read_complete = 0;
