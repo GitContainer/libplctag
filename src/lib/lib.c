@@ -381,11 +381,32 @@ void plc_tag_generic_tickler(plc_tag_p tag)
 }
 
 
+/*
+ * plc_tag_generic_handle_event_callbacks
+ * 
+ * This function dispatches all outstanding events to the tag's callback,
+ * if there is one.
+ * 
+ * Known bugs:
+ * 1) if there is no callback, the event flags are not cleared.
+ * 2) if the application changes the callback or unregisters
+ *    it between the main guard if check and the remaining parts,
+ *    we could call a non-existent callback.
+ * 3) the status of the event is not stored when the event is
+ *    created so the status returned is the current status of the tag
+ *    which may have changed.
+ */
 
 void plc_tag_generic_handle_event_callbacks(plc_tag_p tag)
 {
 
     /* call the callbacks outside the API mutex. */
+
+    /* 
+     * FIXME - this is unsafe.   The application could unregister
+     * the callback between the if check and the call to the 
+     * callback function.
+     */
     if(tag && tag->callback) {
         debug_set_tag_id(tag->tag_id);
 
